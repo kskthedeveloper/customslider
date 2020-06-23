@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 
 class TempPainter extends CustomPainter {
   final double silderPosition;
@@ -22,29 +23,31 @@ class TempPainter extends CustomPainter {
     _paintController(canvas, size);
     _paintWaveLine(canvas, size);
     _textPainter(canvas, size);
-//    _paintMarks(canvas, size);
+    _paintMarks(canvas, size);
+    _paintNumbers(canvas, size);
   }
 
+
   _paintMarks(Canvas canvas, Size size) {
-    double bendWidth = 70.0;
-    double bezierWidth = 50.0;
-//    if(position.round() == silderPosition.round())
     for (int i = 0; i <= 100; i++) {
       double position = (size.height / 100) * i;
 
-      if (position <= silderPosition.round() + 60 &&
-          position >= silderPosition.round() - 60) {
-        _paintCurveMarks(canvas, position, 0.0);
+      if(i % 10 == 0 || i == 0) {
+        _paintSingleMark2(canvas, position, 10.0);
       } else {
-        _paintSingleMark(canvas, position, 0.0, 0.0);
+        _paintSingleMark2(canvas, position, 0.0);
       }
 
-//      if(i % 5 == 0 || i == 0) {
-//        _paintSingleMark(canvas, position, 10.0);
-//      } else {
-//        _paintSingleMark(canvas, position, 0.0);
-//      }
+    }
+  }
 
+  _paintNumbers(Canvas canvas, Size size) {
+    var diff = (size.height / 100) * 10;
+    for (int i = 0; i <= 100; i++) {
+      double position = (size.height / 100) * i;
+      if(i % 10 == 0 || i == 0) {
+        _paintNumber(canvas, diff, position, i);
+      }
     }
   }
 
@@ -53,67 +56,70 @@ class TempPainter extends CustomPainter {
     canvas.drawRect(slider, linePainter);
   }
 
-  _paintCurveMarks(Canvas canvas, double position, double dec) {
-    print('in curve ${position.round()}');
-    print('in curve slide ${silderPosition.round()}');
+  _paintSingleMark2(Canvas canvas, double position, double dec) {
+    var nearDistance = 50;
+    var liftDistance = 30;
 
-    if(position.round() == silderPosition.round()) {
-      _paintSingleMark(canvas, position, 15.0, 60);
-    } else if (position.round() > silderPosition.round()) {
-      if (position.round() > silderPosition.round() &&
-          position.round() < silderPosition.round() + 50) {
-        if (position.round() > silderPosition.round() &&
-            position.round() < silderPosition.round() + 40) {
-          if (position.round() > silderPosition.round() &&
-              position.round() < silderPosition.round() + 30) {
-            if (position.round() > silderPosition.round() &&
-                position.round() < silderPosition.round() + 20) {
-              if (position.round() > silderPosition.round() &&
-                  position.round() < silderPosition.round() + 10) {
-                _paintSingleMark(canvas, position, 15.0, 55);
-              } else {
-                _paintSingleMark(canvas, position, 15.0, 50);
-              }
-            } else {
-              _paintSingleMark(canvas, position, 15.0, 40);
-            }
-          } else {
-            _paintSingleMark(canvas, position, 15.0, 30);
-          }
-        } else {
-          _paintSingleMark(canvas, position, 15.0, 20);
-        }
-      } else {
-        _paintSingleMark(canvas, position, 10.0, 10);
-      }
-    } else {
-      if (position.round() < silderPosition.round() &&
-          position.round() > silderPosition.round() - 50) {
-        if (position.round() < silderPosition.round() &&
-            position.round() > silderPosition.round() - 40) {
-          if (position.round() < silderPosition.round() &&
-              position.round() > silderPosition.round() - 30) {
-            if (position.round() < silderPosition.round() &&
-                position.round() > silderPosition.round() - 20) {
-              if (position.round() > silderPosition.round() &&
-                  position.round() < silderPosition.round() - 10) {
-                _paintSingleMark(canvas, position, 10.0, 55);
-              } else {
-                _paintSingleMark(canvas, position, 10.0, 50);
-              }
-            } else {
-              _paintSingleMark(canvas, position, 10.0, 40);
-            }
-          } else {
-            _paintSingleMark(canvas, position, 10.0, 30);
-          }
-        } else {
-          _paintSingleMark(canvas, position, 10.0, 20);
-        }
-      } else {
-        _paintSingleMark(canvas, position, 10.0, 10);
-      }
+    var diff = (silderPosition - position).abs();
+    var distX = (diff/nearDistance) - 1;
+
+    var moveX = min(distX * liftDistance, 0);
+
+    Rect slider = Offset(30.0 - dec + moveX, position) & Size(10.0 + dec, .3);
+    canvas.drawRect(slider, linePainter);
+  }
+
+  _paintNumber(Canvas canvas, double differ, double position, int index) {
+    var nearDistance = 50;
+    var liftDistance = 30;
+
+    var differentBtuPoints = differ;
+
+    var currentPoint = position;
+    var previousPoint = currentPoint - differentBtuPoints;
+    var nextPoint = currentPoint + differentBtuPoints;
+
+    var newPoint = 0;
+
+    if(silderPosition > previousPoint && silderPosition < nextPoint && silderPosition > currentPoint) {
+      var newCurrentPoint = (currentPoint - silderPosition).abs().round();
+      newPoint = ((newCurrentPoint * 9)/differ.round()).round();
+      index += newPoint;
     }
+
+    var diff = (silderPosition - position).abs();
+    var distX = (diff/nearDistance) - 1 ;
+
+    var moveX = min(distX * liftDistance, 0);
+
+
+    final textStyle = TextStyle(
+      color: Colors.black,
+      fontSize: 30 + newPoint.toDouble(),
+    );
+    final textSpan = TextSpan(
+      text:  '$index %',
+      style: textStyle,
+    );
+    final textPainter = TextPainter(
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout(
+      minWidth: 0,
+      maxWidth: 100.0,
+    );
+
+
+    var offset = Offset(-100, position - 20 + (newPoint * 5));
+
+    var myPoint = moveX.abs().round();
+    if(myPoint <= 30  && myPoint >= 0) {
+//      offset =  Offset(-100, position - 20 + moveX);
+    } else {
+//      offset =  Offset(-100, position + 20 - moveX);
+    }
+    textPainter.paint(canvas, offset);
   }
 
   _paintWaveLine(Canvas canvas, Size size) {
