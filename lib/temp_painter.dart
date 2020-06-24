@@ -81,7 +81,7 @@ class TempPainter extends CustomPainter {
 
     var newPoint = 0;
 
-    if(silderPosition > previousPoint && silderPosition < nextPoint && silderPosition > currentPoint) {
+    if(silderPosition > currentPoint && silderPosition < nextPoint ) {
       var newCurrentPoint = (currentPoint - silderPosition).abs().round();
       newPoint = ((newCurrentPoint * 9)/differ.round()).round();
       index += newPoint;
@@ -90,8 +90,8 @@ class TempPainter extends CustomPainter {
     var diff = (silderPosition - position).abs();
     var distX = (diff/nearDistance) - 1 ;
 
-    var moveX = min(distX * liftDistance, 0);
 
+    var moveX = min(distX * liftDistance, 0);
 
     final textStyle = TextStyle(
       color: Colors.black,
@@ -114,31 +114,27 @@ class TempPainter extends CustomPainter {
     var offset = Offset(-100, position - 20 + (newPoint * 5));
 
     var myPoint = moveX.abs().round();
-    if(myPoint <= 30  && myPoint >= 0) {
-//      offset =  Offset(-100, position - 20 + moveX);
-    } else {
-//      offset =  Offset(-100, position + 20 - moveX);
-    }
+
     textPainter.paint(canvas, offset);
   }
 
   _paintWaveLine(Canvas canvas, Size size) {
     double bendWidth = 70.0;
     double bezierWidth = 50.0;
-//
+
     double startOfBend = silderPosition - bendWidth / 2;
     double startOfBezier = startOfBend - bezierWidth;
     double endOfBend = silderPosition + bendWidth / 2;
     double endOfBezier = endOfBend + bezierWidth;
-//
+
     double controlHeight = size.width / 2.4;
     double centerPoint = silderPosition;
-//
+
     double upperControlPoint1 = startOfBend;
     double upperControlPoint2 = startOfBend;
     double lowerControlPoint1 = endOfBend;
     double lowerControlPoint2 = endOfBend;
-//
+
     Path path = Path();
     path.moveTo(size.width, 0.0);
     path.lineTo(size.width, startOfBezier);
